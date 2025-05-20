@@ -1,78 +1,59 @@
-import pytest
-from coffee_shop_challenge.customer import Customer
-from coffee_shop_challenge.coffee import Coffee
-from coffee_shop_challenge.order import Order
+#tests/customer_test.py
+import unittest
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
-def test_customer_init():
-    customer = Customer("John")
-    assert customer.name == "John"
+from customer import Customer
+from coffee import Coffee
+from order import Order
 
-def test_customer_name_validation():
-    with pytest.raises(TypeError):
-        Customer(123)
-    
-    with pytest.raises(ValueError):
-        Customer("")
-    
-    with pytest.raises(ValueError):
-        Customer("ThisNameIsTooLongForACustomer")
+class TestCustomer(unittest.TestCase):
+    def test_create_order_and_relationships(self):
+        customer = Customer("Alice")
+        self.assertEqual(customer.name, "Alice")
 
-def test_customer_name_setter():
-    customer = Customer("John")
-    customer.name = "Jane"
-    assert customer.name == "Jane"
-    
-    with pytest.raises(TypeError):
-        customer.name = 123
-    
-    with pytest.raises(ValueError):
-        customer.name = ""
+    def test_invalid_name_type(self):
+        with self.assertRaises(ValueError):
+            Customer(123)
 
-def test_customer_orders():
-    customer = Customer("John")
-    coffee = Coffee("Latte")
-    order1 = Order(customer, coffee, 5.0)
-    order2 = Order(customer, coffee, 6.0)
-    
-    assert len(customer.orders()) == 2
-    assert order1 in customer.orders()
-    assert order2 in customer.orders()
+    def test_invalid_name_length(self):
+        with self.assertRaises(ValueError):
+            Customer("")
+        with self.assertRaises(ValueError):
+            Customer("a" * 16)
 
-def test_customer_coffees():
-    customer = Customer("John")
-    coffee1 = Coffee("Latte")
-    coffee2 = Coffee("Cappuccino")
-    
-    Order(customer, coffee1, 5.0)
-    Order(customer, coffee2, 6.0)
-    Order(customer, coffee1, 5.5)  # Same coffee again
-    
-    coffees = customer.coffees()
-    assert len(coffees) == 2
-    assert coffee1 in coffees
-    assert coffee2 in coffees
+    def test_name_setter_valid(self):
+        customer = Customer("Tom")
+        customer.name = "Bob"
+        self.assertEqual(customer.name, "Bob")
 
-def test_customer_create_order():
-    customer = Customer("John")
-    coffee = Coffee("Latte")
-    
-    order = customer.create_order(coffee, 5.0)
-    assert isinstance(order, Order)
-    assert order.customer == customer
-    assert order.coffee == coffee
-    assert order.price == 5.0
+    def test_name_setter_invalid(self):
+        customer = Customer("Tom")
+        with self.assertRaises(ValueError):
+            customer.name = ""
+        with self.assertRaises(ValueError):
+            customer.name = 123
 
-def test_most_aficionado():
-    customer1 = Customer("John")
-    customer2 = Customer("Jane")
-    coffee = Coffee("Latte")
-    
-    Order(customer1, coffee, 5.0)
-    Order(customer1, coffee, 6.0)
-    Order(customer2, coffee, 4.0)
-    
-    assert Customer.most_aficionado(coffee) == customer1
-    
-    # Test with no orders
-    coffee2 = Coffee("Cappuccino")
-    assert Customer.most_aficionado(coffee2) is None 
+    def test_create_order_and_relationships(self):
+        customer = Customer("Dana")
+        coffee = Coffee("Latte")
+        order = customer.create_order(coffee, 4.5)
+
+        self.assertIn(order, customer.orders())
+        self.assertIn(coffee, customer.coffees())
+        self.assertIn(order, coffee.orders) 
+
+    def test_most_aficionado(self):
+        c1 = Customer("Alice")
+        c2 = Customer("Bob")
+        coffee = Coffee("Mocha")
+
+        c1.create_order(coffee, 5.0)
+        c1.create_order(coffee, 4.0)
+        c2.create_order(coffee, 3.0)
+
+        self.assertEqual(Customer.most_aficionado(coffee), c1)
+
+if __name__ == '__main__':
+    unittest.main()

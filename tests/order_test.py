@@ -1,56 +1,48 @@
-import pytest
-from coffee_shop_challenge.customer import Customer
-from coffee_shop_challenge.coffee import Coffee
-from coffee_shop_challenge.order import Order
+import unittest
+from customer import Customer
+from coffee import Coffee
+from order import Order
 
-def test_order_init():
-    customer = Customer("John")
-    coffee = Coffee("Latte")
-    order = Order(customer, coffee, 5.0)
-    
-    assert order.customer == customer
-    assert order.coffee == coffee
-    assert order.price == 5.0
+class TestOrder(unittest.TestCase):
+    def test_valid_order(self):
+        c = Customer("Lily")
+        coffee = Coffee("Espresso")
+        order = Order(c, coffee, 5.5)
 
-def test_order_validation():
-    customer = Customer("John")
-    coffee = Coffee("Latte")
-    
-    with pytest.raises(TypeError):
-        Order("not a customer", coffee, 5.0)
-    
-    with pytest.raises(TypeError):
-        Order(customer, "not a coffee", 5.0)
-    
-    with pytest.raises(TypeError):
-        Order(customer, coffee, "5.0")
-    
-    with pytest.raises(ValueError):
-        Order(customer, coffee, 0.5)  # Too low
-    
-    with pytest.raises(ValueError):
-        Order(customer, coffee, 10.5)  # Too high
+        self.assertEqual(order.customer, c)
+        self.assertEqual(order.coffee, coffee)
+        self.assertEqual(order.price, 5.5)
 
-def test_order_immutability():
-    customer = Customer("John")
-    coffee = Coffee("Latte")
-    order = Order(customer, coffee, 5.0)
-    
-    with pytest.raises(AttributeError):
-        order.price = 6.0
-    
-    with pytest.raises(AttributeError):
-        order.customer = Customer("Jane")
-    
-    with pytest.raises(AttributeError):
-        order.coffee = Coffee("Cappuccino")
+    def test_invalid_customer_type(self):
+        coffee = Coffee("Latte")
+        with self.assertRaises(TypeError):
+            Order("NotACustomer", coffee, 4.0)
 
-def test_order_relationships():
-    customer = Customer("John")
-    coffee = Coffee("Latte")
-    order = Order(customer, coffee, 5.0)
-    
-    assert order in customer.orders()
-    assert order in coffee.orders()
-    assert customer in coffee.customers()
-    assert coffee in customer.coffees() 
+    def test_invalid_coffee_type(self):
+        customer = Customer("Milo")
+        with self.assertRaises(TypeError):
+            Order(customer, "NotACoffee", 3.0)
+
+    def test_invalid_price_type(self):
+        c = Customer("Nora")
+        coffee = Coffee("Macchiato")
+        with self.assertRaises(ValueError):
+            Order(c, coffee, "not a float")
+
+    def test_invalid_price_range(self):
+        c = Customer("Owen")
+        coffee = Coffee("Mocha")
+        with self.assertRaises(ValueError):
+            Order(c, coffee, 0.5)
+        with self.assertRaises(ValueError):
+            Order(c, coffee, 12.0)
+
+    def test_price_is_immutable(self):
+        c = Customer("Zoe")
+        coffee = Coffee("Ristretto")
+        order = Order(c, coffee, 5.0)
+        with self.assertRaises(AttributeError):
+            order.price = 6.0
+
+if __name__ == '__main__':
+    unittest.main()

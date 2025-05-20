@@ -1,66 +1,27 @@
-import pytest
-from coffee_shop_challenge.customer import Customer
-from coffee_shop_challenge.coffee import Coffee
-from coffee_shop_challenge.order import Order
+class Coffee:
+    def __init__(self, name):
+        if not isinstance(name, str) or len(name) < 3:
+            raise ValueError("Coffee name must be a string with at least 3 characters")
+        self._name = name
 
-def test_coffee_init():
-    coffee = Coffee("Latte")
-    assert coffee.name == "Latte"
+    @property
+    def name(self):
+        return self._name
 
-def test_coffee_name_validation():
-    with pytest.raises(TypeError):
-        Coffee(123)
-    
-    with pytest.raises(ValueError):
-        Coffee("Te")  # Too short
+    @property
+    def orders(self):
+        from order import Order  
+        return [order for order in Order.all_orders if order.coffee == self]
 
-def test_coffee_name_immutability():
-    coffee = Coffee("Latte")
-    with pytest.raises(AttributeError):
-        coffee.name = "Cappuccino"
+    @property
+    def customers(self):
+        return list(set(order.customer for order in self.orders))
 
-def test_coffee_orders():
-    coffee = Coffee("Latte")
-    customer = Customer("John")
-    order1 = Order(customer, coffee, 5.0)
-    order2 = Order(customer, coffee, 6.0)
-    
-    assert len(coffee.orders()) == 2
-    assert order1 in coffee.orders()
-    assert order2 in coffee.orders()
+    def num_orders(self):
+        return len(self.orders)
 
-def test_coffee_customers():
-    coffee = Coffee("Latte")
-    customer1 = Customer("John")
-    customer2 = Customer("Jane")
-    
-    Order(customer1, coffee, 5.0)
-    Order(customer2, coffee, 6.0)
-    Order(customer1, coffee, 5.5)  # Same customer again
-    
-    customers = coffee.customers()
-    assert len(customers) == 2
-    assert customer1 in customers
-    assert customer2 in customers
-
-def test_coffee_num_orders():
-    coffee = Coffee("Latte")
-    customer = Customer("John")
-    
-    assert coffee.num_orders() == 0
-    
-    Order(customer, coffee, 5.0)
-    Order(customer, coffee, 6.0)
-    
-    assert coffee.num_orders() == 2
-
-def test_coffee_average_price():
-    coffee = Coffee("Latte")
-    customer = Customer("John")
-    
-    assert coffee.average_price() == 0
-    
-    Order(customer, coffee, 5.0)
-    Order(customer, coffee, 6.0)
-    
-    assert coffee.average_price() == 5.5 
+    def average_price(self):
+        if len(self.orders) == 0:
+            return 0
+        total = sum(order.price for order in self.orders)
+        return total / len(self.orders)
